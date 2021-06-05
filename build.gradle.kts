@@ -6,6 +6,7 @@ plugins {
     id("io.spring.dependency-management") version "1.0.11.RELEASE" apply false
     kotlin("plugin.spring") version "1.5.10" apply false
     id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
+    kotlin("kapt") version "1.4.10"
 }
 
 group = "settlement"

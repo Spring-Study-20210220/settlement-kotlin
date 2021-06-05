@@ -1,10 +1,14 @@
 package settlement.kotlin.service.owner
 
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import settlement.kotlin.db.owner.Owner
 import settlement.kotlin.db.owner.OwnerRepository
 import settlement.kotlin.db.user.UserRepository
 import settlement.kotlin.service.owner.req.CreateOwnerRequest
+import settlement.kotlin.service.owner.req.QueryOwnerRequest
 import settlement.kotlin.service.owner.res.CreateOwnerResponse
+import settlement.kotlin.service.owner.res.OwnerResponse
 
 class OwnerService(
     private val ownerRepository: OwnerRepository,
@@ -33,5 +37,9 @@ class OwnerService(
                 phoneNumber = phoneNumber
             )
         }
+    }
+
+    fun queryOwner(req: QueryOwnerRequest, pageable: Pageable): Page<OwnerResponse> {
+        TODO()
     }
 }
