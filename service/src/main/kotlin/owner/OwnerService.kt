@@ -7,8 +7,10 @@ import settlement.kotlin.db.owner.OwnerRepository
 import settlement.kotlin.db.user.UserRepository
 import settlement.kotlin.service.owner.req.CreateOwnerRequest
 import settlement.kotlin.service.owner.req.QueryOwnerRequest
+import settlement.kotlin.service.owner.req.UpdateOwnerRequest
 import settlement.kotlin.service.owner.res.CreateOwnerResponse
 import settlement.kotlin.service.owner.res.OwnerResponse
+import settlement.kotlin.service.owner.res.UpdateOwnerResponse
 
 class OwnerService(
     private val ownerRepository: OwnerRepository,
@@ -53,4 +55,22 @@ class OwnerService(
                 phoneNumber = it.phoneNumber
             )
         }
+
+    fun updateOwner(req: UpdateOwnerRequest): UpdateOwnerResponse {
+        val owner = ownerRepository.findById(req.ownerId).orElseThrow(::RuntimeException)
+
+        return ownerRepository.save(
+            owner.copy(
+                name = req.name ?: owner.name,
+                phoneNumber = req.phoneNumber ?: owner.phoneNumber
+            )
+        ).let {
+            UpdateOwnerResponse(
+                id = it.id,
+                name = it.name,
+                email = it.email,
+                phoneNumber = it.phoneNumber
+            )
+        }
+    }
 }

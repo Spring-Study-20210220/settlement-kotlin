@@ -11,6 +11,8 @@ import settlement.kotlin.db.owner.OwnerRepository
 import settlement.kotlin.db.user.User
 import settlement.kotlin.db.user.UserRepository
 import settlement.kotlin.service.owner.req.CreateOwnerRequest
+import settlement.kotlin.service.owner.req.UpdateOwnerRequest
+import java.util.Optional
 
 class OwnerServiceSpec : FeatureSpec() {
     private val ownerRepository: OwnerRepository = mockk()
@@ -20,6 +22,9 @@ class OwnerServiceSpec : FeatureSpec() {
     private val userIdSlot = slot<Long>()
     private val emailSlot = slot<String>()
     private val adminUser = User(id = 1L, email = "test", password = "test", nickname = "test", isAdmin = true)
+
+    private val ownerIdSlot = slot<Long>()
+    private val ownerSlot = slot<Owner>()
     private val owner = Owner(id = 1L, name = "test", email = "test@test.test", phoneNumber = "010-1111-1111")
 
     init {
@@ -35,7 +40,19 @@ class OwnerServiceSpec : FeatureSpec() {
             else null
         }
 
-        every { ownerRepository.save(any()) } returns owner
+        every { ownerRepository.save(capture(ownerSlot)) }.answers {
+            val capturedOwner = ownerSlot.captured
+            if (capturedOwner.id == 0L) {
+                capturedOwner.copy(id = 1L)
+            } else {
+                capturedOwner
+            }
+        }
+
+        every { ownerRepository.findById(capture(ownerIdSlot)) }.answers {
+            if (ownerIdSlot.captured == owner.id) Optional.of(owner)
+            else Optional.empty()
+        }
 
         feature("업주 등록 기능") {
             scenario("중복된 이메일이 없으면, 정상적으로 등록한다.") {
@@ -73,6 +90,26 @@ class OwnerServiceSpec : FeatureSpec() {
                 )
 
                 shouldThrowExactly<RuntimeException> { ownerService.createOwner(req) }
+            }
+        }
+
+        feature("업주 업데이트 기능") {
+            scenario("업주가 존재하지 않으면, 예외가 발생한다.") {
+                shouldThrowExactly<RuntimeException> {
+                    ownerService.updateOwner(
+                        UpdateOwnerRequest(ownerId = 100, name = "test", phoneNumber = "test")
+                    )
+                }
+            }
+
+            scenario("업주가 존재한다면, 요청에 맞게 업주 정보를 수정한다.") {
+                val result = ownerService.updateOwner(
+                    UpdateOwnerRequest(ownerId = 1, name = "jon", phoneNumber = "1111-1111")
+                )
+
+                result.id shouldBe 1L
+                result.name shouldBe "jon"
+                result.phoneNumber shouldBe "1111-1111"
             }
         }
     }
