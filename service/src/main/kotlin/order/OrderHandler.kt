@@ -19,6 +19,7 @@ object OrderHandler {
 
         return CreateOrderEvent(
             orderId = insertInDb(ownerId, totalPrice),
+            ownerId = ownerId,
             totalPrice = totalPrice,
             payments = command.payments,
         )
