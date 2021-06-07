@@ -1,3 +1,8 @@
 package settlement.kotlin.service.owner.res
 
-class OwnerResponse
+data class OwnerResponse(
+    val id: Long,
+    val name: String,
+    val email: String,
+    val phoneNumber: String
+)

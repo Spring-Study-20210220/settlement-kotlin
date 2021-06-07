@@ -39,7 +39,18 @@ class OwnerService(
         }
     }
 
-    fun queryOwner(req: QueryOwnerRequest, pageable: Pageable): Page<OwnerResponse> {
-        TODO()
-    }
+    fun queryOwner(req: QueryOwnerRequest, pageable: Pageable): Page<OwnerResponse> =
+        ownerRepository.queryOwner(
+            id = req.ownerId,
+            name = req.ownerName,
+            email = req.ownerEmail,
+            pageable = pageable
+        ).map {
+            OwnerResponse(
+                id = it.id,
+                name = it.name,
+                email = it.email,
+                phoneNumber = it.phoneNumber
+            )
+        }
 }

@@ -6,13 +6,11 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import org.springframework.data.domain.PageRequest
 import settlement.kotlin.db.owner.Owner
 import settlement.kotlin.db.owner.OwnerRepository
 import settlement.kotlin.db.user.User
 import settlement.kotlin.db.user.UserRepository
 import settlement.kotlin.service.owner.req.CreateOwnerRequest
-import settlement.kotlin.service.owner.req.QueryOwnerRequest
 
 class OwnerServiceSpec : FeatureSpec() {
     private val ownerRepository: OwnerRepository = mockk()
@@ -66,7 +64,7 @@ class OwnerServiceSpec : FeatureSpec() {
                 shouldThrowExactly<RuntimeException> { ownerService.createOwner(req) }
             }
 
-            scenario("권한이 없는 유저 요청의 경우, 예외가 발생한다.") {
+            scenario("권한이 없는 유저 요청의 경우, 예외가 발생한다x.") {
                 val req = CreateOwnerRequest(
                     userId = 10L,
                     ownerName = "test",
@@ -75,22 +73,6 @@ class OwnerServiceSpec : FeatureSpec() {
                 )
 
                 shouldThrowExactly<RuntimeException> { ownerService.createOwner(req) }
-            }
-        }
-
-        feature("업주 조회 기능") {
-            scenario("업주 고유 번호, 업주 이름, 업주 이메일에 따라 업주를 조회한다.") {
-                val req = QueryOwnerRequest(
-                    ownerId = 1L,
-                    ownerName = "test",
-                    ownerEmail = "test@test.test"
-                )
-
-                val pageable = PageRequest.of(0, 3)
-
-                val result = ownerService.queryOwner(req, pageable)
-
-                result.content
             }
         }
     }
