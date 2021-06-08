@@ -14,5 +14,10 @@ data class Owner(
     var name: String,
     @Email
     val email: String,
-    val phoneNumber: String
-)
+    var phoneNumber: String
+){
+    fun modifyOwnerInfo(name: String, phoneNumber: String){
+        this.name=name
+        this.phoneNumber=phoneNumber
+    }
+}

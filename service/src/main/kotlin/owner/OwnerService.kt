@@ -6,8 +6,10 @@ import settlement.kotlin.db.owner.Owner
 import settlement.kotlin.db.owner.OwnerRepository
 import settlement.kotlin.db.user.UserRepository
 import settlement.kotlin.service.owner.req.CreateOwnerRequest
+import settlement.kotlin.service.owner.req.ModifyOwnerRequest
 import settlement.kotlin.service.owner.req.QueryOwnerRequest
 import settlement.kotlin.service.owner.res.CreateOwnerResponse
+import settlement.kotlin.service.owner.res.ModifyOwnerResponse
 import settlement.kotlin.service.owner.res.OwnerResponse
 
 class OwnerService(
@@ -15,7 +17,7 @@ class OwnerService(
     private val userRepository: UserRepository
 ) {
 
-    fun createOwner(createOwnerRequest: CreateOwnerRequest): CreateOwnerResponse {
+    fun createOwner(createOwnerRequest: CreateOwnerRequest): OwnerResponse {
         userRepository.findByIdAndIsAdmin(createOwnerRequest.userId, true)
             ?: throw RuntimeException("권한이 없는 요청입니다.")
 
@@ -30,7 +32,7 @@ class OwnerService(
                 phoneNumber = createOwnerRequest.ownerPhoneNumber
             )
         ).run {
-            CreateOwnerResponse(
+            OwnerResponse(
                 id = id,
                 name = name,
                 email = email,
@@ -53,4 +55,16 @@ class OwnerService(
                 phoneNumber = it.phoneNumber
             )
         }
+
+    fun modifyOwner(req: ModifyOwnerRequest, ownerId: Long): ModifyOwnerResponse {
+        val owner = ownerRepository.findById(ownerId)
+            .orElseThrow(::RuntimeException)
+        owner.modifyOwnerInfo(name = req.ownerName, phoneNumber = req.ownerPhoneNumber)
+        return ModifyOwnerResponse(
+            id = owner.id,
+            name = owner.name,
+            email = owner.email,
+            phoneNumber = owner.phoneNumber
+        )
+    }
 }
