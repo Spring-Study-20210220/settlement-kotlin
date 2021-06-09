@@ -1,12 +1,6 @@
 package settlement.kotlin.db.owner
 
-import javax.persistence.Entity
-import javax.persistence.FetchType
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
+import javax.persistence.*
 
 @Entity(name = "accounts")
 data class Account(
@@ -16,7 +10,13 @@ data class Account(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
     val owner: Owner,
-    val bank: String,
-    val bankAccount: String,
-    val accountHolder: String
-)
+    var bank: String,
+    var bankAccount: String,
+    var accountHolder: String
+) {
+    fun modifyAccountInfo(bank: String, bankAccount: String, accountHolder: String) {
+        this.bank = bank
+        this.bankAccount = bankAccount
+        this.accountHolder = accountHolder
+    }
+}

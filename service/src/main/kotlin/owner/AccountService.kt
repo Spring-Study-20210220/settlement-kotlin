@@ -1,10 +1,13 @@
 package settlement.kotlin.service.owner
 
+import org.springframework.transaction.annotation.Transactional
 import settlement.kotlin.db.owner.Account
 import settlement.kotlin.db.owner.AccountRepository
 import settlement.kotlin.db.owner.OwnerRepository
 import settlement.kotlin.service.owner.req.CreateAccountRequest
+import settlement.kotlin.service.owner.req.ModifyAccountRequest
 import settlement.kotlin.service.owner.res.CreateAccountResponse
+import settlement.kotlin.service.owner.res.ModifyAccountResponse
 
 class AccountService(
     private val accountRepository: AccountRepository,
@@ -38,4 +41,25 @@ class AccountService(
             )
         }
     }
+
+    fun modifyAccount(req: ModifyAccountRequest): ModifyAccountResponse {
+        ownerRepository.findById(req.ownerId)
+            .orElseThrow(::RuntimeException)
+        val account = accountRepository.findById(req.id)
+            .orElseThrow(::RuntimeException)
+        account.modifyAccountInfo(
+            bank = req.bank,
+            bankAccount = req.bankAccount,
+            accountHolder = req.accountHolder
+        )
+        return ModifyAccountResponse(
+            ownerId = account.owner.id,
+            id = account.id,
+            bank = account.bank,
+            bankAccount = account.bankAccount,
+            accountHolder = account.accountHolder
+        )
+    }
 }
+
+
