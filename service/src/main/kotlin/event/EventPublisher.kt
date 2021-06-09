@@ -6,7 +6,7 @@ import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Pointcut
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
-import settlement.kotlin.service.user.res.RegisterUserResponse
+import settlement.kotlin.service.Event
 
 @Aspect
 @Component
@@ -21,9 +21,7 @@ class EventPublisher(
     fun doPublishEvent(jp: ProceedingJoinPoint): Any? {
         val result = jp.proceed()
 
-        if(result is RegisterUserResponse) {
-            println("Event Published!")
-            println(result)
+        if (result is Event) {
             eventPublisher.publishEvent(result)
         }
 

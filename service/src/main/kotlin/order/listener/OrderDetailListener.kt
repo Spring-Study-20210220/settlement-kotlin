@@ -6,11 +6,15 @@ import org.springframework.transaction.annotation.Transactional
 import settlement.kotlin.service.order.event.CreateOrderEvent
 
 @Component
-class OrderDetailListener {
+class OrderDetailListener(
+//    private val orderDetailService: OrderDetailService
+) {
 
     @EventListener
     @Transactional
     fun onOrderCreated(event: CreateOrderEvent) {
-        println("Order Created!")
+        event.payments.forEach {
+//            orderDetailService.save()
+        }
     }
 }
