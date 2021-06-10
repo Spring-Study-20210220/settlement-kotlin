@@ -25,7 +25,7 @@ class OwnerServiceSpec : FeatureSpec() {
 
     private val ownerIdSlot = slot<Long>()
     private val ownerSlot = slot<Owner>()
-    private val owner = Owner(id = 1L, name = "test", email = "test@test.test", phoneNumber = "010-1111-1111")
+    private val owner = Owner(id = 1L, name = "test", email = "test@test.test", phoneNumber = "010-1111-1111", emptyList())
 
     init {
         every {

@@ -6,11 +6,12 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import settlement.kotlin.db.order.Order
-import settlement.kotlin.db.order.OrderDetail
+import settlement.kotlin.db.order.OrderDetailEntity
 import settlement.kotlin.db.order.OrderDetailRepository
+import settlement.kotlin.db.order.OrderEntity
 import settlement.kotlin.db.order.OrderRepository
 import settlement.kotlin.db.order.OrderStatus
+import settlement.kotlin.service.order.model.OrderDetailId
 import settlement.kotlin.service.order.model.OrderId
 import settlement.kotlin.service.order.model.PaymentMethod
 import settlement.kotlin.service.order.model.Price
@@ -25,14 +26,14 @@ class OrderDetailServiceSpec : FeatureSpec() {
         orderDetailRepository = orderDetailRepository,
         orderRepository = orderRepository
     )
-    private val existOrder = Order(
+    private val existOrder = OrderEntity(
         id = 1L,
         ownerId = 1L,
         totalPrice = 99999,
         status = OrderStatus.DELIVERED,
         createdAt = LocalDateTime.now()
     )
-    private val existOrderDetail = OrderDetail(
+    private val existOrderDetail = OrderDetailEntity(
         id = 1L,
         orderId = 1L,
         paymentMethod = PaymentMethod.CASH.name,
@@ -40,7 +41,7 @@ class OrderDetailServiceSpec : FeatureSpec() {
     )
     private val orderIdSlot = slot<Long>()
     private val paymentMethodSlot = slot<String>()
-    private val orderDetailSlot = slot<OrderDetail>()
+    private val orderDetailSlot = slot<OrderDetailEntity>()
 
     init {
         feature("상세 주문 생성") {
@@ -66,7 +67,7 @@ class OrderDetailServiceSpec : FeatureSpec() {
                 orderDetailRepository.save(capture(orderDetailSlot))
             } answers {
                 val (id, orderId, paymentMethod, price) = orderDetailSlot.captured
-                OrderDetail(id = id, orderId = orderId, paymentMethod = paymentMethod, price = price)
+                OrderDetailEntity(id = id, orderId = orderId, paymentMethod = paymentMethod, price = price)
             }
 
             scenario("해당하는 주문이 없으면, 예외를 발생시킨다.") {
@@ -103,6 +104,23 @@ class OrderDetailServiceSpec : FeatureSpec() {
                 result.orderId shouldBe req.orderId
                 result.payment.paymentMethod shouldBe req.paymentMethod
                 result.payment.price shouldBe req.price
+            }
+        }
+
+        feature("주문 상세 조회 기능") {
+            every {
+                orderDetailRepository.findByOrderId(capture(orderIdSlot))
+            }.answers {
+                if (orderIdSlot.captured == existOrder.id) listOf(existOrderDetail)
+                else emptyList()
+            }
+
+            scenario("정상적으로 조회한다.") {
+                val result = orderDetailService.query(OrderId(1L))
+
+                result.isNotEmpty()
+                result[0].id shouldBe OrderDetailId(1L)
+                result[0].orderId shouldBe OrderId(1L)
             }
         }
     }

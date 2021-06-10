@@ -2,6 +2,7 @@ package settlement.kotlin.db.order
 
 import org.springframework.data.jpa.repository.JpaRepository
 
-interface OrderDetailRepository : JpaRepository<OrderDetail, Order> {
-    fun findByOrderIdAndPaymentMethod(orderId: Long, paymentMethod: String): OrderDetail?
+interface OrderDetailRepository : JpaRepository<OrderDetailEntity, OrderEntity> {
+    fun findByOrderIdAndPaymentMethod(orderId: Long, paymentMethod: String): OrderDetailEntity?
+    fun findByOrderId(orderId: Long): List<OrderDetailEntity>
 }

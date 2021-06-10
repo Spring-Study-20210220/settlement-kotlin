@@ -5,7 +5,8 @@ import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
-import settlement.kotlin.db.order.Order
+import org.springframework.data.domain.PageRequest
+import settlement.kotlin.db.order.OrderEntity
 import settlement.kotlin.db.order.OrderRepository
 import settlement.kotlin.db.order.OrderStatus
 import settlement.kotlin.db.owner.Owner
@@ -17,8 +18,10 @@ import settlement.kotlin.service.order.model.PaymentMethod
 import settlement.kotlin.service.order.model.Price
 import settlement.kotlin.service.order.req.CreateOrderCommand
 import settlement.kotlin.service.order.req.ModifyOrderCommand
+import settlement.kotlin.service.order.req.QueryOrderCommand
 import settlement.kotlin.service.owner.model.OwnerId
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @DatabaseTest
 class OrderServiceSpec(
@@ -32,7 +35,7 @@ class OrderServiceSpec(
     )
 
     init {
-        beforeTest {
+        beforeEach {
             if (ownerRepository.findById(1L).isEmpty) {
                 ownerRepository.save(owner)
             }
@@ -96,9 +99,59 @@ class OrderServiceSpec(
                 result.orderStatus shouldBe req.orderStatus
             }
         }
+
+        feature("주문 조회 기능") {
+            scenario("조회") {
+                ownerRepository.save(
+                    Owner(name = "test2", email = "test2@test2.test2", phoneNumber = "010-2222-2222", accounts = emptyList())
+                )
+                orderRepository.saveAll(
+                    listOf(
+                        OrderEntity(
+                            ownerId = 1,
+                            totalPrice = 1000,
+                            createdAt = LocalDateTime.parse(
+                                "2021-05-02 23:59:59",
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                            )
+                        ),
+                        OrderEntity(
+                            ownerId = 1,
+                            totalPrice = 1000,
+                            createdAt = LocalDateTime.parse(
+                                "2021-05-02 23:59:59",
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                            )
+                        ),
+                        OrderEntity(
+                            ownerId = 2,
+                            totalPrice = 1000,
+                            createdAt = LocalDateTime.parse(
+                                "2021-05-02 23:59:59",
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                            )
+                        )
+                    )
+                )
+
+                val result = orderService.queryOrder(
+                    command = QueryOrderCommand(
+                        orderId = null,
+                        ownerId = OwnerId(1L),
+                        startAt = LocalDateTime.parse(
+                            "2021-05-02 23:59:59", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                        ),
+                        endAt = LocalDateTime.parse(
+                            "2021-05-02 23:59:59", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                        )
+                    ),
+                    pageable = PageRequest.of(0, 10)
+                )
+            }
+        }
     }
 
-    private val owner = Owner(name = "test", email = "test@test.test", phoneNumber = "010-1111-1111")
+    private val owner = Owner(name = "test", email = "test@test.test", phoneNumber = "010-1111-1111", accounts = emptyList())
     private val createCommand =
         CreateOrderCommand(
             ownerId = OwnerId(value = 1),
@@ -110,7 +163,14 @@ class OrderServiceSpec(
         )
 
     private val order =
-        Order(ownerId = 1, totalPrice = 1000, status = OrderStatus.IN_DELIVERY, createdAt = LocalDateTime.now())
+        OrderEntity(
+            ownerId = 1,
+            totalPrice = 1000,
+            status = OrderStatus.IN_DELIVERY,
+            createdAt = LocalDateTime.parse(
+                "2021-05-01 23:59:59", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            )
+        )
 
     override fun isolationMode(): IsolationMode = IsolationMode.InstancePerLeaf
 }

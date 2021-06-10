@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport
 import org.springframework.stereotype.Repository
 import org.springframework.util.ObjectUtils
+import settlement.kotlin.db.owner.QAccount.account
 
 interface OwnerRepository : OwnerRepositorySupport, OwnerRepositoryJpa
 
@@ -31,7 +32,10 @@ class OwnerRepositorySupportImpl : QuerydslRepositorySupport(Owner::class.java),
         email: String?,
         pageable: Pageable
     ): PageImpl<Owner> {
-        val query = from(QOwner.owner).where(eqName(name), eqEmail(email), eqId(id)).fetchAll()
+        val query = from(QOwner.owner)
+            .leftJoin(QOwner.owner.accounts, account)
+            .where(eqName(name), eqEmail(email), eqId(id))
+            .fetchAll()
 
         return PageImpl<Owner>(
             querydsl!!.applyPagination(pageable, query).fetch(),

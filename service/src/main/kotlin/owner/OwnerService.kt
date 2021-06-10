@@ -29,7 +29,8 @@ class OwnerService(
             Owner(
                 name = createOwnerRequest.ownerName,
                 email = createOwnerRequest.ownerEmail,
-                phoneNumber = createOwnerRequest.ownerPhoneNumber
+                phoneNumber = createOwnerRequest.ownerPhoneNumber,
+                accounts = emptyList()
             )
         ).run {
             CreateOwnerResponse(
