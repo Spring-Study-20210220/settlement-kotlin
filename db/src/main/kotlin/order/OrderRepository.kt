@@ -17,7 +17,7 @@ interface OrderRepositorySupport {
     fun queryOrder(
         orderId: Long?,
         ownerId: Long?,
-        orderStatus: OrderStatus?,
+        orderStatus: String?,
         startDateTime: LocalDateTime,
         endDateTime: LocalDateTime,
         pageable: Pageable
@@ -29,7 +29,7 @@ class OrderRepositorySupportImpl : QuerydslRepositorySupport(OrderEntity::class.
     override fun queryOrder(
         orderId: Long?,
         ownerId: Long?,
-        orderStatus: OrderStatus?,
+        orderStatus: String?,
         startDateTime: LocalDateTime,
         endDateTime: LocalDateTime,
         pageable: Pageable
@@ -52,7 +52,7 @@ class OrderRepositorySupportImpl : QuerydslRepositorySupport(OrderEntity::class.
         return QOrderEntity.orderEntity.id.eq(id)
     }
 
-    fun eqStatus(status: OrderStatus?): BooleanExpression? {
+    fun eqStatus(status: String?): BooleanExpression? {
         if (ObjectUtils.isEmpty(status)) return null
         return QOrderEntity.orderEntity.status.eq(status)
     }

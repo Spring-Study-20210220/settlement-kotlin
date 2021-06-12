@@ -6,12 +6,12 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import settlement.kotlin.db.owner.Account
+import settlement.kotlin.db.owner.AccountEntity
 import settlement.kotlin.db.owner.AccountRepository
-import settlement.kotlin.db.owner.Owner
+import settlement.kotlin.db.owner.OwnerEntity
 import settlement.kotlin.db.owner.OwnerRepository
 import settlement.kotlin.service.owner.AccountService
-import settlement.kotlin.service.owner.req.CreateAccountRequest
+import settlement.kotlin.service.owner.model.info.CreateAccountInfo
 import java.util.Optional
 
 class AccountServiceSpec : FeatureSpec() {
@@ -27,8 +27,8 @@ class AccountServiceSpec : FeatureSpec() {
     private val bankSlot = slot<String>()
     private val bankAccountSlot = slot<String>()
 
-    private val testOwner = Owner(id = 1L, name = "testUser", email = "test@test", phoneNumber = "testNum", emptyList())
-    private val testAccount = Account(
+    private val testOwner = OwnerEntity(id = 1L, name = "testUser", email = "test@test", phoneNumber = "testNum", emptyList())
+    private val testAccount = AccountEntity(
         id = 1L,
         owner = testOwner,
         bank = "duplicatedBank",
@@ -46,7 +46,7 @@ class AccountServiceSpec : FeatureSpec() {
             }
 
             scenario("오너가 존재하지 않으면 예외가 발생한다.") {
-                val req = CreateAccountRequest(
+                val req = CreateAccountInfo(
                     ownerId = 10,
                     bank = "testbank",
                     bankAccount = "testAccount",
@@ -59,7 +59,7 @@ class AccountServiceSpec : FeatureSpec() {
             }
 
             scenario("오너 이름의 동일 계좌가 존재하면 예외가 발생한다.") {
-                val req = CreateAccountRequest(
+                val req = CreateAccountInfo(
                     ownerId = 1L,
                     bank = "duplicatedBank",
                     bankAccount = "duplicatedAccount",
@@ -86,20 +86,20 @@ class AccountServiceSpec : FeatureSpec() {
             }
 
             scenario("계좌가 정상적으로 등록된다.") {
-                val req = CreateAccountRequest(
+                val req = CreateAccountInfo(
                     ownerId = 1L,
                     bank = "normalBank",
                     bankAccount = "normalBankAccount",
                     accountHolder = "testHolder"
                 )
 
-                val accountSlot = slot<Account>()
+                val accountSlot = slot<AccountEntity>()
 
                 every {
                     accountRepository.save(capture(accountSlot))
                 }.answers {
                     val (id, owner, bank, bankAccount, accountHolder) = accountSlot.captured
-                    Account(
+                    AccountEntity(
                         id = id,
                         owner = owner,
                         bank = bank,

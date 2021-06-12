@@ -2,12 +2,11 @@ package settlement.kotlin.service.user
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import settlement.kotlin.db.user.User
+import settlement.kotlin.db.user.UserEntity
 import settlement.kotlin.db.user.UserRepository
-import settlement.kotlin.service.user.req.LoginUserRequest
-import settlement.kotlin.service.user.req.RegisterUserRequest
-import settlement.kotlin.service.user.res.LoginUserResponse
-import settlement.kotlin.service.user.res.RegisterUserResponse
+import settlement.kotlin.service.user.model.info.LoginUserInfo
+import settlement.kotlin.service.user.model.info.RegisterUserInfo
+import settlement.kotlin.service.user.model.dto.UserDto
 
 @Service
 class UserService(
@@ -15,18 +14,18 @@ class UserService(
 ) {
 
     @Transactional
-    fun register(req: RegisterUserRequest): RegisterUserResponse =
+    fun register(req: RegisterUserInfo): UserDto =
         userRepository.findByEmail(req.email)?.let {
             throw RuntimeException()
         } ?: userRepository.save(
-            User(
+            UserEntity(
                 email = req.email,
                 password = req.password,
                 nickname = req.nickname,
                 isAdmin = req.isAdmin
             )
         ).let {
-            RegisterUserResponse(
+            UserDto(
                 id = it.id,
                 email = it.email,
                 nickname = it.nickname,
@@ -34,11 +33,18 @@ class UserService(
             )
         }
 
-    fun login(req: LoginUserRequest): LoginUserResponse {
+    fun login(req: LoginUserInfo): UserDto {
         val user = userRepository.findByEmail(req.email)
         if (user == null || user.password != req.password) {
-            return LoginUserResponse(false)
+            throw RuntimeException()
         }
-        return LoginUserResponse(true)
+        return user.let {
+            UserDto(
+                id = it.id,
+                email = it.email,
+                nickname = it.nickname,
+                isAdmin = it.isAdmin
+            )
+        }
     }
 }

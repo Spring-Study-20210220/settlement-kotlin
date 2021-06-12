@@ -10,12 +10,10 @@ import settlement.kotlin.db.order.OrderDetailEntity
 import settlement.kotlin.db.order.OrderDetailRepository
 import settlement.kotlin.db.order.OrderEntity
 import settlement.kotlin.db.order.OrderRepository
-import settlement.kotlin.db.order.OrderStatus
-import settlement.kotlin.service.order.model.OrderDetailId
-import settlement.kotlin.service.order.model.OrderId
-import settlement.kotlin.service.order.model.PaymentMethod
-import settlement.kotlin.service.order.model.Price
-import settlement.kotlin.service.order.req.CreateOrderDetailCommand
+import settlement.kotlin.service.order.model.info.CreateOrderDetailInfo
+import settlement.kotlin.service.order.model.dto.OrderStatus
+import settlement.kotlin.service.order.model.dto.PaymentDto
+import settlement.kotlin.service.order.model.dto.PaymentMethod
 import java.time.LocalDateTime
 import java.util.Optional
 
@@ -30,7 +28,7 @@ class OrderDetailServiceSpec : FeatureSpec() {
         id = 1L,
         ownerId = 1L,
         totalPrice = 99999,
-        status = OrderStatus.DELIVERED,
+        status = OrderStatus.DELIVERED.name,
         createdAt = LocalDateTime.now()
     )
     private val existOrderDetail = OrderDetailEntity(
@@ -71,10 +69,9 @@ class OrderDetailServiceSpec : FeatureSpec() {
             }
 
             scenario("해당하는 주문이 없으면, 예외를 발생시킨다.") {
-                val req = CreateOrderDetailCommand(
-                    orderId = OrderId(value = 404L),
-                    paymentMethod = PaymentMethod.CREDIT_CARD,
-                    price = Price(value = 10000),
+                val req = CreateOrderDetailInfo(
+                    orderId = 404L,
+                    payment = PaymentDto(paymentMethod = PaymentMethod.CREDIT_CARD, price = 10000,)
                 )
                 shouldThrowExactly<RuntimeException> {
                     orderDetailService.createOrderDetail(req)
@@ -82,28 +79,29 @@ class OrderDetailServiceSpec : FeatureSpec() {
             }
 
             scenario("중복된 주문-결제수단이 존재할 경우, 예외를 발생시킨다.") {
-                val req = CreateOrderDetailCommand(
-                    orderId = OrderId(value = 1L),
-                    paymentMethod = PaymentMethod.CASH,
-                    price = Price(value = 10000),
+                val req = CreateOrderDetailInfo(
+                    orderId = 1L,
+                    payment = PaymentDto(paymentMethod = PaymentMethod.CASH, price = 10000)
                 )
+
                 shouldThrowExactly<RuntimeException> {
                     orderDetailService.createOrderDetail(req)
                 }
             }
 
             scenario("정상적으로 상세 주문을 생성한다.") {
-                val req = CreateOrderDetailCommand(
-                    orderId = OrderId(value = 1L),
-                    paymentMethod = PaymentMethod.POINT,
-                    price = Price(value = 10000),
+                val req = CreateOrderDetailInfo(
+                    orderId = 1L,
+                    payment = PaymentDto(
+                        paymentMethod = PaymentMethod.POINT,
+                        price = 10000
+                    )
                 )
 
                 val result = orderDetailService.createOrderDetail(req)
 
                 result.orderId shouldBe req.orderId
-                result.payment.paymentMethod shouldBe req.paymentMethod
-                result.payment.price shouldBe req.price
+                result.payment shouldBe req.payment
             }
         }
 
@@ -116,11 +114,11 @@ class OrderDetailServiceSpec : FeatureSpec() {
             }
 
             scenario("정상적으로 조회한다.") {
-                val result = orderDetailService.query(OrderId(1L))
+                val result = orderDetailService.query(1L)
 
                 result.isNotEmpty()
-                result[0].id shouldBe OrderDetailId(1L)
-                result[0].orderId shouldBe OrderId(1L)
+                result[0].id shouldBe 1L
+                result[0].orderId shouldBe 1L
             }
         }
     }

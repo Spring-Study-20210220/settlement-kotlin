@@ -4,34 +4,32 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.delay
 import org.springframework.data.domain.PageRequest
 import settlement.kotlin.db.order.OrderEntity
 import settlement.kotlin.db.order.OrderRepository
-import settlement.kotlin.db.order.OrderStatus
-import settlement.kotlin.db.owner.Owner
+import settlement.kotlin.db.owner.OwnerEntity
 import settlement.kotlin.db.owner.OwnerRepository
 import settlement.kotlin.service.DatabaseTest
-import settlement.kotlin.service.order.model.OrderId
-import settlement.kotlin.service.order.model.Payment
-import settlement.kotlin.service.order.model.PaymentMethod
-import settlement.kotlin.service.order.model.Price
-import settlement.kotlin.service.order.req.CreateOrderCommand
-import settlement.kotlin.service.order.req.ModifyOrderCommand
-import settlement.kotlin.service.order.req.QueryOrderCommand
-import settlement.kotlin.service.owner.model.OwnerId
+import settlement.kotlin.service.order.model.info.CreateOrderInfo
+import settlement.kotlin.service.order.model.info.ModifyOrderInfo
+import settlement.kotlin.service.order.model.dto.OrderStatus
+import settlement.kotlin.service.order.model.dto.PaymentDto
+import settlement.kotlin.service.order.model.dto.PaymentMethod
+import settlement.kotlin.service.order.model.info.QueryOrderInfo
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @DatabaseTest
 class OrderServiceSpec(
     private val ownerRepository: OwnerRepository,
-    private val orderRepository: OrderRepository
+    private val orderRepository: OrderRepository,
+    private val orderDetailService: OrderDetailService
 ) : FeatureSpec() {
 
     private val orderService = OrderService(
         ownerRepository = ownerRepository,
-        orderRepository = orderRepository
+        orderRepository = orderRepository,
+        orderDetailService = orderDetailService
     )
 
     init {
@@ -49,27 +47,23 @@ class OrderServiceSpec(
 
                 shouldThrowExactly<RuntimeException> {
                     orderService.createOrder(
-                        createCommand.copy(ownerId = OwnerId(1000))
+                        createCommand.copy(ownerId = 1000)
                     )
-                    delay(1000)
                 }
             }
 
             scenario("존재하는 업주라면, 주문을 생성한다.") {
                 val result = orderService.createOrder(createCommand)
 
-                result.ownerId.value shouldBe 1L
-                result.totalPrice.value shouldBe 6000
-                result.payments.containsAll(createCommand.payments)
-
-                delay(1000)
+                result.ownerId shouldBe 1L
+                result.totalPrice shouldBe 6000
             }
         }
 
         feature("주문 수정 기능") {
             scenario("존재하지 않는 주문 번호라면, 예외가 발생한다.") {
-                val req = ModifyOrderCommand(
-                    orderId = OrderId(0L),
+                val req = ModifyOrderInfo(
+                    orderId = 0L,
                     orderStatus = OrderStatus.CANCELED
                 )
                 shouldThrowExactly<RuntimeException> {
@@ -78,8 +72,8 @@ class OrderServiceSpec(
             }
 
             scenario("이전 상태로의 수정 요청이라면, 예외가 발생한다.") {
-                val req = ModifyOrderCommand(
-                    orderId = OrderId(1L),
+                val req = ModifyOrderInfo(
+                    orderId = 1L,
                     orderStatus = OrderStatus.ORDER_TAKEN
                 )
                 shouldThrowExactly<RuntimeException> {
@@ -88,15 +82,15 @@ class OrderServiceSpec(
             }
 
             scenario("정상적으로 주문을 수정한다.") {
-                val req = ModifyOrderCommand(
-                    orderId = OrderId(1L),
+                val req = ModifyOrderInfo(
+                    orderId = 1L,
                     orderStatus = OrderStatus.DELIVERED
                 )
 
                 val result = orderService.modifyOrder(req)
 
-                result.orderId shouldBe req.orderId
-                result.orderStatus shouldBe req.orderStatus
+                result.id shouldBe req.orderId
+                result.status shouldBe req.orderStatus
             }
         }
 
@@ -116,7 +110,7 @@ class OrderServiceSpec(
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             )
             scenario("특정 owner에 대해 검색한다.") {
-                val req = QueryOrderCommand(
+                val req = QueryOrderInfo(
                     orderId = null,
                     ownerId = 1L,
                     orderStatus = null,
@@ -128,7 +122,7 @@ class OrderServiceSpec(
                 result.totalElements shouldBe 5
             }
             scenario("주문 상태에 따라 검색한다.") {
-                val req = QueryOrderCommand(
+                val req = QueryOrderInfo(
                     orderId = null,
                     ownerId = null,
                     orderStatus = OrderStatus.DELIVERED,
@@ -137,10 +131,11 @@ class OrderServiceSpec(
                 )
                 val pageable = PageRequest.of(0, 20)
                 val result = orderService.queryOrder(req, pageable)
-                result.totalElements shouldBe 8
+                result.totalElements shouldBe OrderServiceTestData.getTestOrders()
+                    .filter { it.status == req.orderStatus!!.name }.size
             }
             scenario("특정 일시에 따라 검색한다.") {
-                val req = QueryOrderCommand(
+                val req = QueryOrderInfo(
                     orderId = null,
                     ownerId = null,
                     orderStatus = null,
@@ -154,19 +149,19 @@ class OrderServiceSpec(
         }
     }
 
-    private val owner = Owner(name = "test", email = "test@test.test", phoneNumber = "010-1111-1111", accounts = emptyList())
+    private val owner = OwnerEntity(name = "test", email = "test@test.test", phoneNumber = "010-1111-1111", accounts = emptyList())
     private val createCommand =
-        CreateOrderCommand(
-            ownerId = OwnerId(value = 1),
+        CreateOrderInfo(
+            ownerId = 1,
             payments = listOf(
-                Payment(paymentMethod = PaymentMethod.CASH, Price(1000)),
-                Payment(paymentMethod = PaymentMethod.CREDIT_CARD, Price(2000)),
-                Payment(paymentMethod = PaymentMethod.POINT, Price(3000))
+                PaymentDto(paymentMethod = PaymentMethod.CASH, 1000),
+                PaymentDto(paymentMethod = PaymentMethod.CREDIT_CARD, 2000),
+                PaymentDto(paymentMethod = PaymentMethod.POINT, 3000)
             )
         )
 
     private val order =
-        OrderEntity(ownerId = 1, totalPrice = 1000, status = OrderStatus.IN_DELIVERY, createdAt = LocalDateTime.now())
+        OrderEntity(ownerId = 1, totalPrice = 1000, status = OrderStatus.IN_DELIVERY.name, createdAt = LocalDateTime.now())
 
     override fun isolationMode(): IsolationMode = IsolationMode.InstancePerLeaf
 }

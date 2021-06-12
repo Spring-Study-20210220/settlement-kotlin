@@ -7,10 +7,10 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import settlement.kotlin.db.user.User
+import settlement.kotlin.db.user.UserEntity
 import settlement.kotlin.db.user.UserRepository
-import settlement.kotlin.service.user.req.LoginUserRequest
-import settlement.kotlin.service.user.req.RegisterUserRequest
+import settlement.kotlin.service.user.model.info.LoginUserInfo
+import settlement.kotlin.service.user.model.info.RegisterUserInfo
 
 class UserServiceSpec : FeatureSpec() {
 
@@ -29,7 +29,7 @@ class UserServiceSpec : FeatureSpec() {
                 null
             }
 
-            every { userRepository.save(any()) } returns User(
+            every { userRepository.save(any()) } returns UserEntity(
                 id = 1,
                 email = registerUserRequest.email,
                 password = registerUserRequest.password,
@@ -53,7 +53,7 @@ class UserServiceSpec : FeatureSpec() {
         }
 
         feature("유저 로그인 기능") {
-            every { userRepository.findByEmail(any()) } returns User(
+            every { userRepository.findByEmail(any()) } returns UserEntity(
                 id = 1,
                 email = "testuser@gmail.com",
                 password = "1234",
@@ -62,38 +62,39 @@ class UserServiceSpec : FeatureSpec() {
             )
 
             scenario("이메일과 비밀번호가 일치한다.") {
-                val loginResponse = userService.login(loginSucceedRequest)
+                val userDto = userService.login(loginSucceedRequest)
 
-                loginResponse.isComplete shouldBe true
+                userDto.email shouldBe "testuser@gmail.com"
+                userDto.nickname shouldBe "test"
             }
 
             scenario("이메일과 비밀번호가 일치하지 않는다.") {
-                val loginResponse = userService.login(loginFailRequest)
-
-                loginResponse.isComplete shouldBe false
+                shouldThrowExactly<RuntimeException> {
+                    userService.login(loginFailRequest)
+                }
             }
         }
     }
 
-    private val registerUserRequest = RegisterUserRequest(
+    private val registerUserRequest = RegisterUserInfo(
         email = "testuser@gmail.com",
         password = "pass1234~!",
         nickname = "testuser",
         isAdmin = false
     )
 
-    private val duplicatedRegisterUserRequest = RegisterUserRequest(
+    private val duplicatedRegisterUserRequest = RegisterUserInfo(
         email = "duplicate@gmail.com",
         password = "pass1234~!",
         nickname = "testuser",
         isAdmin = false
     )
 
-    private val loginSucceedRequest = LoginUserRequest(
+    private val loginSucceedRequest = LoginUserInfo(
         email = "testuser@gmail.com", password = "1234"
     )
 
-    private val loginFailRequest = LoginUserRequest(
+    private val loginFailRequest = LoginUserInfo(
         email = "testuser@gmail.com", password = "123"
     )
 }

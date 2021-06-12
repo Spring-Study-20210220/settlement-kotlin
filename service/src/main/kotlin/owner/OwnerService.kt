@@ -3,15 +3,13 @@ package settlement.kotlin.service.owner
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
-import settlement.kotlin.db.owner.Owner
+import settlement.kotlin.db.owner.OwnerEntity
 import settlement.kotlin.db.owner.OwnerRepository
 import settlement.kotlin.db.user.UserRepository
-import settlement.kotlin.service.owner.req.CreateOwnerRequest
-import settlement.kotlin.service.owner.req.QueryOwnerRequest
-import settlement.kotlin.service.owner.req.UpdateOwnerRequest
-import settlement.kotlin.service.owner.res.CreateOwnerResponse
-import settlement.kotlin.service.owner.res.OwnerResponse
-import settlement.kotlin.service.owner.res.UpdateOwnerResponse
+import settlement.kotlin.service.owner.model.info.CreateOwnerInfo
+import settlement.kotlin.service.owner.model.dto.OwnerDto
+import settlement.kotlin.service.owner.model.info.QueryOwnerInfo
+import settlement.kotlin.service.owner.model.info.UpdateOwnerInfo
 
 @Service
 class OwnerService(
@@ -19,23 +17,23 @@ class OwnerService(
     private val userRepository: UserRepository
 ) {
 
-    fun createOwner(createOwnerRequest: CreateOwnerRequest): CreateOwnerResponse {
-        userRepository.findByIdAndIsAdmin(createOwnerRequest.userId, true)
+    fun createOwner(createOwnerInfo: CreateOwnerInfo): OwnerDto {
+        userRepository.findByIdAndIsAdmin(createOwnerInfo.userId, true)
             ?: throw RuntimeException("권한이 없는 요청입니다.")
 
-        ownerRepository.findByEmail(createOwnerRequest.ownerEmail)?.let {
+        ownerRepository.findByEmail(createOwnerInfo.ownerEmail)?.let {
             throw RuntimeException("중복된 이메일입니다.")
         }
 
         return ownerRepository.save(
-            Owner(
-                name = createOwnerRequest.ownerName,
-                email = createOwnerRequest.ownerEmail,
-                phoneNumber = createOwnerRequest.ownerPhoneNumber,
+            OwnerEntity(
+                name = createOwnerInfo.ownerName,
+                email = createOwnerInfo.ownerEmail,
+                phoneNumber = createOwnerInfo.ownerPhoneNumber,
                 accounts = emptyList()
             )
         ).run {
-            CreateOwnerResponse(
+            OwnerDto(
                 id = id,
                 name = name,
                 email = email,
@@ -44,14 +42,14 @@ class OwnerService(
         }
     }
 
-    fun queryOwner(req: QueryOwnerRequest, pageable: Pageable): Page<OwnerResponse> =
+    fun queryOwner(req: QueryOwnerInfo, pageable: Pageable): Page<OwnerDto> =
         ownerRepository.queryOwner(
             id = req.ownerId,
             name = req.ownerName,
             email = req.ownerEmail,
             pageable = pageable
         ).map {
-            OwnerResponse(
+            OwnerDto(
                 id = it.id,
                 name = it.name,
                 email = it.email,
@@ -59,7 +57,7 @@ class OwnerService(
             )
         }
 
-    fun updateOwner(req: UpdateOwnerRequest): UpdateOwnerResponse {
+    fun updateOwner(req: UpdateOwnerInfo): OwnerDto {
         val owner = ownerRepository.findById(req.ownerId).orElseThrow(::RuntimeException)
 
         return ownerRepository.save(
@@ -68,7 +66,7 @@ class OwnerService(
                 phoneNumber = req.phoneNumber ?: owner.phoneNumber
             )
         ).let {
-            UpdateOwnerResponse(
+            OwnerDto(
                 id = it.id,
                 name = it.name,
                 email = it.email,

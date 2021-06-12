@@ -1,16 +1,16 @@
 package settlement.kotlin.service.owner
 
-import settlement.kotlin.db.owner.Account
+import settlement.kotlin.db.owner.AccountEntity
 import settlement.kotlin.db.owner.AccountRepository
 import settlement.kotlin.db.owner.OwnerRepository
-import settlement.kotlin.service.owner.req.CreateAccountRequest
-import settlement.kotlin.service.owner.res.CreateAccountResponse
+import settlement.kotlin.service.owner.model.dto.AccountDto
+import settlement.kotlin.service.owner.model.info.CreateAccountInfo
 
 class AccountService(
     private val accountRepository: AccountRepository,
     private val ownerRepository: OwnerRepository
 ) {
-    fun createAccount(req: CreateAccountRequest): CreateAccountResponse {
+    fun createAccount(req: CreateAccountInfo): AccountDto {
         val owner = ownerRepository.findById(req.ownerId).orElseThrow(::RuntimeException)
 
         accountRepository.findByOwnerIdAndBankAndBankAccount(
@@ -22,14 +22,14 @@ class AccountService(
         }
 
         return accountRepository.save(
-            Account(
+            AccountEntity(
                 owner = owner,
                 bank = req.bank,
                 bankAccount = req.bankAccount,
                 accountHolder = req.accountHolder
             )
         ).let {
-            CreateAccountResponse(
+            AccountDto(
                 id = it.id,
                 ownerId = it.owner.id,
                 bank = it.bank,
