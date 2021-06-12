@@ -11,7 +11,7 @@ import java.time.LocalDateTime
 
 interface OrderRepository : OrderRepositoryJpa, OrderRepositorySupport
 
-interface OrderRepositoryJpa : JpaRepository<Order, Long>
+interface OrderRepositoryJpa : JpaRepository<OrderEntity, Long>
 
 interface OrderRepositorySupport {
     fun queryOrder(
@@ -21,11 +21,11 @@ interface OrderRepositorySupport {
         startDateTime: LocalDateTime,
         endDateTime: LocalDateTime,
         pageable: Pageable
-    ): PageImpl<Order>
+    ): PageImpl<OrderEntity>
 }
 
 @Repository
-class OrderRepositorySupportImpl : QuerydslRepositorySupport(Order::class.java), OrderRepositorySupport {
+class OrderRepositorySupportImpl : QuerydslRepositorySupport(OrderEntity::class.java), OrderRepositorySupport {
     override fun queryOrder(
         orderId: Long?,
         ownerId: Long?,
@@ -33,14 +33,14 @@ class OrderRepositorySupportImpl : QuerydslRepositorySupport(Order::class.java),
         startDateTime: LocalDateTime,
         endDateTime: LocalDateTime,
         pageable: Pageable
-    ): PageImpl<Order> {
-        val query = from(QOrder.order)
+    ): PageImpl<OrderEntity> {
+        val query = from(QOrderEntity.orderEntity)
             .where(
                 eqId(orderId), eqOwnerId(ownerId), eqStatus(orderStatus),
                 between(startDateTime, endDateTime)
             )
             .fetchAll()
-        return PageImpl<Order>(
+        return PageImpl<OrderEntity>(
             querydsl!!.applyPagination(pageable, query).fetch(),
             pageable,
             query.fetchCount()
@@ -49,22 +49,20 @@ class OrderRepositorySupportImpl : QuerydslRepositorySupport(Order::class.java),
 
     fun eqId(id: Long?): BooleanExpression? {
         if (ObjectUtils.isEmpty(id)) return null
-        return QOrder.order.id.eq(id)
+        return QOrderEntity.orderEntity.id.eq(id)
     }
 
     fun eqStatus(status: OrderStatus?): BooleanExpression? {
         if (ObjectUtils.isEmpty(status)) return null
-        return QOrder.order.status.eq(status)
+        return QOrderEntity.orderEntity.status.eq(status)
     }
 
     fun eqOwnerId(ownerId: Long?): BooleanExpression? {
         if (ObjectUtils.isEmpty(ownerId)) return null
-        return QOrder.order.ownerId.eq(ownerId)
+        return QOrderEntity.orderEntity.ownerId.eq(ownerId)
     }
 
     fun between(startTime: LocalDateTime, endTime: LocalDateTime): BooleanExpression {
-        return QOrder.order.createdAt.between(startTime, endTime)
+        return QOrderEntity.orderEntity.createdAt.between(startTime, endTime)
     }
-
-
 }

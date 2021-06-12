@@ -3,17 +3,15 @@ package settlement.kotlin.service.order
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FeatureSpec
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
 import org.springframework.data.domain.PageRequest
-import settlement.kotlin.db.order.Order
+import settlement.kotlin.db.order.OrderEntity
 import settlement.kotlin.db.order.OrderRepository
 import settlement.kotlin.db.order.OrderStatus
 import settlement.kotlin.db.owner.Owner
 import settlement.kotlin.db.owner.OwnerRepository
 import settlement.kotlin.service.DatabaseTest
-import settlement.kotlin.service.order.OrderServiceTestData.getTestOwners
 import settlement.kotlin.service.order.model.OrderId
 import settlement.kotlin.service.order.model.Payment
 import settlement.kotlin.service.order.model.PaymentMethod
@@ -106,12 +104,8 @@ class OrderServiceSpec(
             beforeTest {
                 ownerRepository.deleteAll()
                 orderRepository.deleteAll()
-                OrderServiceTestData.getTestOwners().forEach { owner ->
-                    ownerRepository.save(owner)
-                }
-                OrderServiceTestData.getTestOrders().forEach { order->
-                    orderRepository.save(order)
-                }
+                ownerRepository.saveAll(OrderServiceTestData.getTestOwners())
+                orderRepository.saveAll(OrderServiceTestData.getTestOrders())
             }
             val beforeTime1 = LocalDateTime.parse(
                 "2021-06-09 20:30:00",
@@ -129,11 +123,11 @@ class OrderServiceSpec(
                     startDateTime = beforeTime1,
                     endDateTime = afterTime4
                 )
-                val pageable = PageRequest.of(0,20)
-                val result = orderService.queryOrder(req,pageable)
+                val pageable = PageRequest.of(0, 20)
+                val result = orderService.queryOrder(req, pageable)
                 result.totalElements shouldBe 5
             }
-            scenario("주문 상태에 따라 검색한다."){
+            scenario("주문 상태에 따라 검색한다.") {
                 val req = QueryOrderCommand(
                     orderId = null,
                     ownerId = null,
@@ -141,11 +135,11 @@ class OrderServiceSpec(
                     startDateTime = beforeTime1,
                     endDateTime = afterTime4
                 )
-                val pageable = PageRequest.of(0,20)
-                val result = orderService.queryOrder(req,pageable)
+                val pageable = PageRequest.of(0, 20)
+                val result = orderService.queryOrder(req, pageable)
                 result.totalElements shouldBe 8
             }
-            scenario("특정 일시에 따라 검색한다."){
+            scenario("특정 일시에 따라 검색한다.") {
                 val req = QueryOrderCommand(
                     orderId = null,
                     ownerId = null,
@@ -153,15 +147,14 @@ class OrderServiceSpec(
                     startDateTime = beforeTime1,
                     endDateTime = afterTime4
                 )
-                val pageable = PageRequest.of(0,20)
-                val result = orderService.queryOrder(req,pageable)
+                val pageable = PageRequest.of(0, 20)
+                val result = orderService.queryOrder(req, pageable)
                 result.totalElements shouldBe 10
             }
         }
-
     }
 
-    private val owner = Owner(name = "test", email = "test@test.test", phoneNumber = "010-1111-1111")
+    private val owner = Owner(name = "test", email = "test@test.test", phoneNumber = "010-1111-1111", accounts = emptyList())
     private val createCommand =
         CreateOrderCommand(
             ownerId = OwnerId(value = 1),
@@ -173,7 +166,7 @@ class OrderServiceSpec(
         )
 
     private val order =
-        Order(ownerId = 1, totalPrice = 1000, status = OrderStatus.IN_DELIVERY, createdAt = LocalDateTime.now())
+        OrderEntity(ownerId = 1, totalPrice = 1000, status = OrderStatus.IN_DELIVERY, createdAt = LocalDateTime.now())
 
     override fun isolationMode(): IsolationMode = IsolationMode.InstancePerLeaf
 }
