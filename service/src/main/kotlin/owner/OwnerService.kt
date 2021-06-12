@@ -2,6 +2,7 @@ package settlement.kotlin.service.owner
 
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.stereotype.Service
 import settlement.kotlin.db.owner.Owner
 import settlement.kotlin.db.owner.OwnerRepository
 import settlement.kotlin.db.user.UserRepository
@@ -12,6 +13,7 @@ import settlement.kotlin.service.owner.res.CreateOwnerResponse
 import settlement.kotlin.service.owner.res.OwnerResponse
 import settlement.kotlin.service.owner.res.UpdateOwnerResponse
 
+@Service
 class OwnerService(
     private val ownerRepository: OwnerRepository,
     private val userRepository: UserRepository
