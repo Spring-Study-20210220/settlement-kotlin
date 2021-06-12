@@ -27,7 +27,7 @@ class AccountServiceSpec : FeatureSpec() {
     private val bankSlot = slot<String>()
     private val bankAccountSlot = slot<String>()
 
-    private val testOwner = Owner(id = 1L, name = "testUser", email = "test@test", phoneNumber = "testNum")
+    private val testOwner = Owner(id = 1L, name = "testUser", email = "test@test", phoneNumber = "testNum", emptyList())
     private val testAccount = Account(
         id = 1L,
         owner = testOwner,

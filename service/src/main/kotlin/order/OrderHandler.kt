@@ -1,6 +1,6 @@
 package settlement.kotlin.service.order
 
-import settlement.kotlin.db.order.Order
+import settlement.kotlin.db.order.OrderEntity
 import settlement.kotlin.db.order.OrderStatus
 import settlement.kotlin.service.order.event.CreateOrderEvent
 import settlement.kotlin.service.order.event.ModifyOrderEvent
@@ -32,13 +32,13 @@ object OrderHandler {
 
     fun modify(
         command: ModifyOrderCommand,
-        findOrder: (OrderId) -> Optional<Order>,
-        canBe: (Order, OrderStatus) -> Boolean,
-        modifyInDb: (Order, OrderStatus) -> OrderId
+        findOrderEntity: (OrderId) -> Optional<OrderEntity>,
+        canBe: (OrderEntity, OrderStatus) -> Boolean,
+        modifyInDb: (OrderEntity, OrderStatus) -> OrderId
     ): ModifyOrderEvent {
         val (orderId, orderStatus) = command
 
-        val order = findOrder(orderId).orElseThrow(::RuntimeException)
+        val order = findOrderEntity(orderId).orElseThrow(::RuntimeException)
         if (!canBe(order, orderStatus)) throw RuntimeException()
 
         return ModifyOrderEvent(

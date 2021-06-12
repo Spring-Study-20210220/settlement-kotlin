@@ -13,5 +13,5 @@ tasks.getByName<Jar>("jar") {
 }
 
 dependencies {
-    implementation(project(":db"))
+    api(project(":db"))
 }
