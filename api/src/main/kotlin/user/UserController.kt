@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import settlement.kotlin.SuccessResponse
+import settlement.kotlin.db.user.UserRepository
 import settlement.kotlin.service.user.UserService
 import settlement.kotlin.service.user.model.info.LoginUserInfo
 import settlement.kotlin.service.user.model.info.RegisterUserInfo
@@ -12,7 +13,8 @@ import settlement.kotlin.service.user.model.info.RegisterUserInfo
 @RequestMapping("user")
 @RestController
 class UserController(
-    private val userService: UserService
+    private val userService: UserService,
+    private val userRepository: UserRepository
 ) {
 
     @PostMapping("")
