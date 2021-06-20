@@ -4,6 +4,9 @@ import org.springframework.stereotype.Service
 import settlement.kotlin.db.order.OrderDetailEntity
 import settlement.kotlin.db.order.OrderDetailRepository
 import settlement.kotlin.db.order.OrderRepository
+import settlement.kotlin.db.order.OrderRepositorySupportImpl
+import settlement.kotlin.db.order.OrderRepositoryJpa
+import settlement.kotlin.db.owner.OwnerRepositoryJpa
 import settlement.kotlin.service.order.model.info.CreateOrderDetailInfo
 import settlement.kotlin.service.order.model.dto.OrderDetailDto
 import settlement.kotlin.service.order.model.dto.PaymentDto
@@ -12,7 +15,8 @@ import settlement.kotlin.service.order.model.dto.PaymentMethod
 @Service
 class OrderDetailService(
     private val orderDetailRepository: OrderDetailRepository,
-    private val orderRepository: OrderRepository
+    private val orderRepository: OrderRepository,
+    private val orderRepositoryJpa: OrderRepositoryJpa
 ) {
 
     fun createOrderDetail(info: CreateOrderDetailInfo): OrderDetailDto {

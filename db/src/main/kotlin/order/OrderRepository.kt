@@ -1,68 +1,63 @@
 package settlement.kotlin.db.order
 
-import com.querydsl.core.types.dsl.BooleanExpression
-import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport
-import org.springframework.stereotype.Repository
-import org.springframework.util.ObjectUtils
+import org.springframework.data.jpa.repository.Query
 import java.time.LocalDateTime
+
+interface OrderRepositoryJpa : JpaRepository<OrderEntity, Long> {
+    @Query(
+        "select O.owner_id as ownerid, sum(O.total_price) as settlemoney " +
+                "from orders as O " +
+                "where O.created_at>=:start and O.created_at<:end " +
+                "group by O.owner_id",
+        nativeQuery = true
+    )
+    fun querySettleGroupByOwnerId(start: LocalDateTime, end: LocalDateTime): List<QuerySettleProjection>
+
+    @Query("select o.owner_id as ownerid, o.total_price as totalprice from orders as o", nativeQuery = true)
+    fun testQuery(): List<QuerySimpleProjection>
+
+    @Query(
+        "select o.owner_id as ownerid, sum(o.total_price) as settlemoney " +
+                "from orders as o " +
+                "group by o.owner_id",
+        nativeQuery = true
+    )
+    fun testProjectionQuery1(): List<QuerySettleProjection>
+
+    @Query(
+        "select new settlement.kotlin.db.order.QueryTestProjectionByConstructor(" +
+                "o.owner_id as ownerId, " +
+                "sum(o.total_price) as settleMoney " +
+                ") " +
+                "from orders as o " +
+                "group by o.owner_id",
+        nativeQuery = true
+    )
+    fun testProjectionQuery2(): List<QueryTestProjectionByConstructor>
+}
 
 interface OrderRepository : OrderRepositoryJpa, OrderRepositorySupport
 
-interface OrderRepositoryJpa : JpaRepository<OrderEntity, Long>
-
-interface OrderRepositorySupport {
-    fun queryOrder(
-        orderId: Long?,
-        ownerId: Long?,
-        orderStatus: String?,
-        startDateTime: LocalDateTime,
-        endDateTime: LocalDateTime,
-        pageable: Pageable
-    ): PageImpl<OrderEntity>
+interface QuerySimpleProjection {
+    fun getOwnerId(): Long
+    fun getTotalPrice(): Int
 }
 
-@Repository
-class OrderRepositorySupportImpl : QuerydslRepositorySupport(OrderEntity::class.java), OrderRepositorySupport {
-    override fun queryOrder(
-        orderId: Long?,
-        ownerId: Long?,
-        orderStatus: String?,
-        startDateTime: LocalDateTime,
-        endDateTime: LocalDateTime,
-        pageable: Pageable
-    ): PageImpl<OrderEntity> {
-        val query = from(QOrderEntity.orderEntity)
-            .where(
-                eqId(orderId), eqOwnerId(ownerId), eqStatus(orderStatus),
-                between(startDateTime, endDateTime)
-            )
-            .fetchAll()
-        return PageImpl<OrderEntity>(
-            querydsl!!.applyPagination(pageable, query).fetch(),
-            pageable,
-            query.fetchCount()
-        )
-    }
-
-    fun eqId(id: Long?): BooleanExpression? {
-        if (ObjectUtils.isEmpty(id)) return null
-        return QOrderEntity.orderEntity.id.eq(id)
-    }
-
-    fun eqStatus(status: String?): BooleanExpression? {
-        if (ObjectUtils.isEmpty(status)) return null
-        return QOrderEntity.orderEntity.status.eq(status)
-    }
-
-    fun eqOwnerId(ownerId: Long?): BooleanExpression? {
-        if (ObjectUtils.isEmpty(ownerId)) return null
-        return QOrderEntity.orderEntity.ownerId.eq(ownerId)
-    }
-
-    fun between(startTime: LocalDateTime, endTime: LocalDateTime): BooleanExpression {
-        return QOrderEntity.orderEntity.createdAt.between(startTime, endTime)
-    }
+interface QuerySettleProjection {
+    fun getOwnerId(): Long
+    fun getSettleMoney(): Int
 }
+
+interface QueryTestProjectionByInterface {
+    fun getOwnerId(): Long
+    fun getSettleMoney(): Int
+}
+
+data class QueryTestProjectionByConstructor(
+    val ownerId: Long,
+    val settleMoney: Int
+)
+
+
+

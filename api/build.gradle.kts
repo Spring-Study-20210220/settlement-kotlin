@@ -7,6 +7,7 @@ plugins {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-batch")
+    testImplementation("org.springframework.batch:spring-batch-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webflux")
-    implementation(project(":service"))
+    api(project(":service"))
 }

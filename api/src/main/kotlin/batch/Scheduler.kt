@@ -12,13 +12,13 @@ class Scheduler(
     val batchConfig: BatchConfig
 ) {
 
-    @Scheduled(initialDelay = 1000, fixedDelay = 1000)
-    fun runJob() {
-        jobLauncher.run(
-            batchConfig.simpleJob(),
-            JobParametersBuilder()
-                .addString("datetime", LocalDateTime.now().toString())
-                .toJobParameters()
-        )
-    }
+//    @Scheduled(initialDelay = 1000, fixedDelay = 1000)
+//    fun runJob() {
+//        jobLauncher.run(
+//            batchConfig.simpleJob(),
+//            JobParametersBuilder()
+//                .addString("date", LocalDateTime.now().toString())
+//                .toJobParameters()
+//        )
+//    }
 }

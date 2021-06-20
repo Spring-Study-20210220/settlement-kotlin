@@ -1,6 +1,7 @@
 package settlement.kotlin.db.settle
 
 import settlement.kotlin.db.owner.OwnerEntity
+import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.persistence.*
 
@@ -9,7 +10,7 @@ data class SettleEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L,
-    val data: LocalDateTime,
+    val data: LocalDate,
     val amount: Int,
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")

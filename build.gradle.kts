@@ -34,7 +34,6 @@ subprojects {
         implementation(kotlin("stdlib-jdk8"))
         implementation(kotlin("reflect"))
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-        testImplementation("org.springframework.boot:spring-boot-starter-test")
     }
 
     val kotestVersion = "4.4.+"
